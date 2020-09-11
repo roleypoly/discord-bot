@@ -1,0 +1,85 @@
+name: CI Workflow
+
+on: push
+
+jobs:
+  go_test:
+    name: Go Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Get Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13.x
+      
+      - uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Go Get
+        run: go get -v ./...
+        env:
+          GO111MODULES: on
+
+      - name: Go Build
+        run: go build -v ./...
+        env:
+          GO111MODULES: on
+
+      - name: Go Test
+        run: go test -v ./...
+        env:
+          GO111MODULES: on
+
+  build_publish:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    needs: go_test
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Docker Login
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Build & Push Docker Image
+        uses: roleypoly/actions/dxt@master
+        with:
+          tag: ${{ github.repository }}:${{ github.sha }}
+          platforms: linux/amd64
+          qemu: 'false'
+          push: 'true'
+
+      - name: Container Structure Tests
+        run: |
+          docker run --rm -v$(pwd):/src -v/var/run/docker.sock:/var/run/docker.sock \
+            gcr.io/gcp-runtimes/container-structure-test \
+              test --image ${{ github.repository }}:${{ github.sha }} --pull --config /src/Dockerfile_test.yml
+
+      - name: Retag Image
+        uses: roleypoly/actions/retag@master
+        with:
+          src: ${{ github.repository }}:${{ github.sha }}
+
+      - name: Deploy to Staging
+        uses: roleypoly/actions/deploy@master
+        if: github.ref == 'refs/heads/develop'
+        with:
+          environment: staging
+          new_tag: ${{ github.sha }}
+          app: discord
+          github_auth_token: ${{ secrets.GITOPS_TOKEN }}
+
+      - name: Deploy to Production
+        uses: roleypoly/actions/deploy@master
+        if: github.ref == 'refs/heads/master'
+        with:
+          environment: production
+          new_tag: ${{ github.sha }}
+          app: discord
+          github_auth_token: ${{ secrets.GITOPS_TOKEN }}

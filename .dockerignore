@@ -1,0 +1,5 @@
+vendor
+.env
+hack
+.github
+test-build.sh

@@ -1,0 +1,5 @@
+github.com/go-logr/logr v0.1.0/go.mod h1:ixOQHD9gLJUVQQ2ZOR7zLEifBX6tGkNJF4QyIY7sIas=
+github.com/roleypoly/common v0.0.0-20200807221914-544fe56e7b13 h1:tX+WYeuRt1HraKMLw8ygHPzVK6i3D867aORybu36jq4=
+github.com/roleypoly/common v0.0.0-20200807221914-544fe56e7b13/go.mod h1:gtowOVU7/vnvHNzEDfBavWPB4+kIjMJYL/EA5dKdBy0=
+k8s.io/klog v1.0.0 h1:Pt+yjF5aB1xDSVbau4VsWe+dQNzA0qv1LlXdC2dF6Q8=
+k8s.io/klog v1.0.0/go.mod h1:4Bi6QPql/J/LkTDqv7R/cd3hPo4k2DG6Ptcz060Ez5I=
